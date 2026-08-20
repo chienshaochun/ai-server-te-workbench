@@ -25,7 +25,6 @@ Detect → Reproduce → Isolate → Collect Evidence → Recommend Checks → R
 | 治具規劃與導入 | Fixture readiness、calibration 與 golden sample 檢查 |
 | 產線軟體自動化 | 批次執行、timeout、retry、結果彙整與報告產生 |
 
-職缺參考：[台灣就業通－緯創資通自動化測試／測試工程師](https://job.taiwanjobs.gov.tw/internet/index/JobDetail.aspx?EMPLOYER_ID=122234&HIRE_ID=14205955&R2=11)
 
 ## MVP 操作流程
 
