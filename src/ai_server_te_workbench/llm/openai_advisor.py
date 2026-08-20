@@ -180,9 +180,7 @@ class OpenAIAdvisor:
                 "question_zh": step.question_zh,
                 "recommended_check_zh": step.recommended_check_zh,
                 "safety_note_zh": step.safety_note_zh or "",
-                "allowed_observation_labels": [
-                    branch.answer_label_zh for branch in step.branches
-                ],
+                "allowed_observation_labels": [branch.answer_label_zh for branch in step.branches],
             },
             "recorded_observations": [turn.observation_zh for turn in session.transcript],
             "user_question": question,
@@ -255,9 +253,7 @@ class OpenAIAdvisor:
         except LLMServiceError:
             raise
         except Exception as error:
-            raise LLMServiceError(
-                "AI 服務目前無法使用，已改用 deterministic fallback。"
-            ) from error
+            raise LLMServiceError("AI 服務目前無法使用，已改用 deterministic fallback。") from error
 
 
 def _optional(value: object) -> str | None:

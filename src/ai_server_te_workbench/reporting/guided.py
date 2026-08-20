@@ -22,9 +22,7 @@ class GuidedReportDocument:
             raise TypeError("session must be a TroubleshootingSession")
         if self.session.outcome is SessionOutcome.ACTIVE:
             raise ValueError("active session cannot be reported")
-        if self.triage_advice is not None and not isinstance(
-            self.triage_advice, TriageAdvice
-        ):
+        if self.triage_advice is not None and not isinstance(self.triage_advice, TriageAdvice):
             raise TypeError("triage_advice must be TriageAdvice or None")
         if isinstance(self.assistant_exchanges, list):
             object.__setattr__(self, "assistant_exchanges", tuple(self.assistant_exchanges))

@@ -58,9 +58,7 @@ def valid_payload(**overrides) -> dict[str, object]:
 
 
 def test_deterministic_triage_remains_available_without_llm() -> None:
-    advice = HybridTriageService().analyze(
-        "Model X", "這台可以但另一台不行", use_llm=True
-    )
+    advice = HybridTriageService().analyze("Model X", "這台可以但另一台不行", use_llm=True)
 
     assert advice.source is AdviceSource.DETERMINISTIC
     assert advice.category is SymptomCategory.ONE_UNIT_ONLY
@@ -92,9 +90,7 @@ def test_mismatched_ai_route_is_rejected_and_hybrid_falls_back() -> None:
     responses = FakeResponses(valid_payload(recommended_step_id="gpu_enum"))
     advisor = OpenAIAdvisor("test-key", client=FakeClient(responses))
 
-    advice = HybridTriageService(advisor).analyze(
-        "Model X", "這台 BMC 網路連不上", use_llm=True
-    )
+    advice = HybridTriageService(advisor).analyze("Model X", "這台 BMC 網路連不上", use_llm=True)
 
     assert advice.source is AdviceSource.DETERMINISTIC
     assert advice.category is SymptomCategory.NETWORK_UNREACHABLE
@@ -131,9 +127,7 @@ def test_quota_error_becomes_safe_user_facing_fallback_reason() -> None:
         client=FakeClient(FakeResponses(valid_payload(), error=rate_error)),
     )
 
-    advice = HybridTriageService(advisor).analyze(
-        "Model X", "BMC 網路連不上", use_llm=True
-    )
+    advice = HybridTriageService(advisor).analyze("Model X", "BMC 網路連不上", use_llm=True)
 
     assert advice.source is AdviceSource.DETERMINISTIC
     assert "額度不足" in advice.fallback_reason

@@ -94,9 +94,7 @@ if session is None:
             f"resolved {pattern.resolution_rate:.0%}": pattern
             for pattern in synthetic_case_patterns()
         }
-        selected_label = st.selectbox(
-            "常見問題（synthetic demo history）", tuple(pattern_by_label)
-        )
+        selected_label = st.selectbox("常見問題（synthetic demo history）", tuple(pattern_by_label))
         selected = pattern_by_label[selected_label]
         category = selected.symptom_category
         confidence = 1.0
@@ -179,14 +177,9 @@ else:
                 f"模型 {triage_advice.model or '未使用'}"
             )
             if triage_advice.observations:
-                st.markdown(
-                    "**辨識到的線索：** " + "、".join(triage_advice.observations)
-                )
+                st.markdown("**辨識到的線索：** " + "、".join(triage_advice.observations))
             if triage_advice.missing_information:
-                st.markdown(
-                    "**仍缺少的資訊：** "
-                    + "、".join(triage_advice.missing_information)
-                )
+                st.markdown("**仍缺少的資訊：** " + "、".join(triage_advice.missing_information))
             st.markdown(f"**選擇理由：** {triage_advice.reason_zh}")
             if triage_advice.safety_warning_zh:
                 st.warning(triage_advice.safety_warning_zh)
@@ -208,22 +201,17 @@ else:
             st.error(f"安全要求：{step.safety_note_zh}")
         if st.session_state.llm_session_enabled and advisor is not None:
             with st.expander("AI 輔助問答（只解釋目前步驟）", expanded=False):
-                st.caption(
-                    "AI 回答是 advisory，不會替你提交測試結果，也不能跳過核准流程。"
-                )
+                st.caption("AI 回答是 advisory，不會替你提交測試結果，也不能跳過核准流程。")
                 for exchange in st.session_state.assistant_exchanges:
                     st.markdown(f"**你：** {exchange.question_zh}")
                     st.markdown(f"**AI：** {exchange.answer.answer_zh}")
                     st.markdown(
-                        f"**核准的下一動作：** "
-                        f"{exchange.answer.recommended_next_action_zh}"
+                        f"**核准的下一動作：** {exchange.answer.recommended_next_action_zh}"
                     )
                     if exchange.answer.safety_warning_zh:
                         st.warning(exchange.answer.safety_warning_zh)
                     st.divider()
-                remaining_calls = (
-                    MAX_LLM_CALLS_PER_SESSION - st.session_state.llm_call_count
-                )
+                remaining_calls = MAX_LLM_CALLS_PER_SESSION - st.session_state.llm_call_count
                 question = st.text_input(
                     "針對目前步驟提問",
                     placeholder="例如：為什麼要先用 Golden Sample？",

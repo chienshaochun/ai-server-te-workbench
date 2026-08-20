@@ -53,9 +53,7 @@ class HybridTriageService:
 
 def deterministic_triage(problem: str) -> TriageAdvice:
     issue_match = match_issue(problem)
-    category = (
-        SymptomCategory.UNKNOWN if issue_match.needs_confirmation else issue_match.category
-    )
+    category = SymptomCategory.UNKNOWN if issue_match.needs_confirmation else issue_match.category
     entry_by_category = {entry.category: entry for entry in generic_knowledge_entries()}
     if category is SymptomCategory.UNKNOWN:
         summary = "目前文字證據不足，先由使用者確認最接近的症狀類型。"
@@ -85,6 +83,4 @@ def validate_llm_route(advice: TriageAdvice) -> None:
 def _validate_route(advice: TriageAdvice) -> None:
     expected_step = START_STEPS[advice.category]
     if advice.recommended_step_id != expected_step:
-        raise LLMServiceError(
-            "AI 回傳的檢查入口不在核准路徑中，已改用 deterministic fallback。"
-        )
+        raise LLMServiceError("AI 回傳的檢查入口不在核准路徑中，已改用 deterministic fallback。")
