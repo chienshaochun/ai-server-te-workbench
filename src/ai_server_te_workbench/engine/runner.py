@@ -62,7 +62,10 @@ class TestRunner:
                 for case in test_plan.cases
             )
         else:
-            results = tuple(self._execute_case(case, adapter) for case in test_plan.cases)
+            evidence_scope = f"{fixture.station_id}-{dut.serial_number}"
+            results = tuple(
+                self._execute_case(case, adapter, evidence_scope) for case in test_plan.cases
+            )
 
         return TestRun(
             run_id=f"RUN-{uuid4()}",
@@ -75,7 +78,9 @@ class TestRunner:
             results=results,
         )
 
-    def _execute_case(self, case: TestCase, adapter: DeviceAdapter) -> TestResult:
+    def _execute_case(
+        self, case: TestCase, adapter: DeviceAdapter, evidence_scope: str
+    ) -> TestResult:
         started = perf_counter_ns()
         prior_evidence: list[Evidence] = []
 
@@ -86,7 +91,9 @@ class TestRunner:
                 status = _compare(case, actual)
                 if status == ResultStatus.FAIL:
                     prior_evidence.append(
-                        _measurement_evidence(case, actual, adapter.source_name, attempt)
+                        _measurement_evidence(
+                            case, actual, adapter.source_name, attempt, evidence_scope
+                        )
                     )
                 return TestResult(
                     test_case_id=case.id,
@@ -99,15 +106,36 @@ class TestRunner:
                 )
             except DeviceTimeoutError as error:
                 prior_evidence.append(
-                    _error_evidence(case, attempt, adapter.source_name, "timeout", str(error))
+                    _error_evidence(
+                        case,
+                        attempt,
+                        adapter.source_name,
+                        "timeout",
+                        str(error),
+                        evidence_scope,
+                    )
                 )
             except DeviceAdapterError as error:
                 prior_evidence.append(
-                    _error_evidence(case, attempt, adapter.source_name, "read-error", str(error))
+                    _error_evidence(
+                        case,
+                        attempt,
+                        adapter.source_name,
+                        "read-error",
+                        str(error),
+                        evidence_scope,
+                    )
                 )
             except (TypeError, ValueError) as error:
                 prior_evidence.append(
-                    _error_evidence(case, attempt, adapter.source_name, "invalid-data", str(error))
+                    _error_evidence(
+                        case,
+                        attempt,
+                        adapter.source_name,
+                        "invalid-data",
+                        str(error),
+                        evidence_scope,
+                    )
                 )
                 break
 
@@ -145,10 +173,14 @@ def _compare(case: TestCase, actual: JsonScalar) -> ResultStatus:
 
 
 def _measurement_evidence(
-    case: TestCase, actual: JsonScalar, source: str, attempt: int
+    case: TestCase,
+    actual: JsonScalar,
+    source: str,
+    attempt: int,
+    evidence_scope: str,
 ) -> Evidence:
     return Evidence(
-        id=f"E-{case.id}-A{attempt}",
+        id=f"E-{evidence_scope}-{case.id}-A{attempt}",
         source=source,
         observation=f"Measured value did not satisfy {case.comparison.value} requirement",
         expected=case.expected,
@@ -162,9 +194,10 @@ def _error_evidence(
     source: str,
     error_kind: str,
     detail: str,
+    evidence_scope: str,
 ) -> Evidence:
     return Evidence(
-        id=f"E-{case.id}-A{attempt}",
+        id=f"E-{evidence_scope}-{case.id}-A{attempt}",
         source=source,
         observation=f"{error_kind}: {detail}",
         expected=case.expected,

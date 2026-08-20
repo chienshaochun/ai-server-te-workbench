@@ -15,6 +15,7 @@ from ai_server_te_workbench.models import (
     TestPlan,
     TestResult,
     TestRun,
+    TroubleshootingAssessment,
     TroubleshootingClassification,
 )
 from ai_server_te_workbench.scenarios import (
@@ -41,6 +42,7 @@ __all__ = [
     "TestPlan",
     "TestResult",
     "TestRun",
+    "TroubleshootingAssessment",
     "TroubleshootingClassification",
     "built_in_scenarios",
     "standard_test_plan",

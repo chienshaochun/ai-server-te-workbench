@@ -35,7 +35,9 @@ class Scenario:
     def __post_init__(self) -> None:
         if not isinstance(self.id, str):
             raise TypeError("scenario id must be text")
-        if not self.id or not all(character.isalnum() or character in "_-" for character in self.id):
+        if not self.id or not all(
+            character.isalnum() or character in "_-" for character in self.id
+        ):
             raise ValueError("scenario id contains unsupported characters")
         if not isinstance(self.description, str):
             raise TypeError("scenario description must be text")

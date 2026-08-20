@@ -287,6 +287,37 @@ class TestRun:
         return RunStatus.PASS
 
 
+@dataclass(frozen=True)
+class TroubleshootingAssessment:
+    classification: TroubleshootingClassification
+    observation: str
+    evidence_ids: tuple[str, ...]
+    possible_causes: tuple[str, ...]
+    verification_steps: tuple[str, ...]
+    confidence: Confidence
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.classification, TroubleshootingClassification):
+            raise TypeError("classification must be a TroubleshootingClassification")
+        _require_text(self.observation, "observation")
+        for field_name in ("evidence_ids", "possible_causes", "verification_steps"):
+            value = getattr(self, field_name)
+            if isinstance(value, list):
+                value = tuple(value)
+                object.__setattr__(self, field_name, value)
+            if not isinstance(value, tuple) or not all(isinstance(item, str) for item in value):
+                raise TypeError(f"{field_name} must contain only text values")
+            if any(not item.strip() for item in value):
+                raise ValueError(f"{field_name} cannot contain empty values")
+        if len(self.evidence_ids) != len(set(self.evidence_ids)):
+            raise ValueError("evidence_ids cannot contain duplicates")
+        if self.classification != TroubleshootingClassification.PASS:
+            if not self.possible_causes or not self.verification_steps:
+                raise ValueError("non-pass assessment requires causes and verification steps")
+        if not isinstance(self.confidence, Confidence):
+            raise TypeError("confidence must be a Confidence")
+
+
 def _require_text(value: object, field_name: str) -> None:
     if not isinstance(value, str):
         raise TypeError(f"{field_name} must be text")
