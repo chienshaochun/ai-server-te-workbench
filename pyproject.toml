@@ -9,6 +9,7 @@ description = "A deterministic AI server test engineering troubleshooting simula
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+  "openai>=2.0,<3",
   "streamlit>=1.40,<2",
 ]
 
