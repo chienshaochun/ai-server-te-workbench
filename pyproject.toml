@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ai-server-te-workbench"
 version = "0.1.0"
-description = "A deterministic AI server test engineering troubleshooting simulator."
+description = "A guarded AI-assisted server test engineering troubleshooting simulator."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
