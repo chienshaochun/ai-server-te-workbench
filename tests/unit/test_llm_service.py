@@ -1,7 +1,9 @@
 import json
 from types import SimpleNamespace
 
+import httpx
 import pytest
+from openai import RateLimitError
 
 from ai_server_te_workbench.conversation import ConversationController
 from ai_server_te_workbench.knowledge import SymptomCategory, match_case_patterns
@@ -16,13 +18,22 @@ from ai_server_te_workbench.llm import (
 
 
 class FakeResponses:
-    def __init__(self, payload: dict[str, object], *, model: str = "test-model") -> None:
+    def __init__(
+        self,
+        payload: dict[str, object],
+        *,
+        model: str = "test-model",
+        error: Exception | None = None,
+    ) -> None:
         self.payload = payload
         self.model = model
+        self.error = error
         self.calls: list[dict[str, object]] = []
 
     def create(self, **kwargs):
         self.calls.append(kwargs)
+        if self.error is not None:
+            raise self.error
         return SimpleNamespace(output_text=json.dumps(self.payload), model=self.model)
 
 
@@ -103,6 +114,30 @@ def test_provider_failure_never_breaks_the_troubleshooting_entry() -> None:
     assert advice.source is AdviceSource.DETERMINISTIC
     assert advice.category is SymptomCategory.FIRMWARE_MISMATCH
     assert advice.fallback_reason == "temporary failure"
+
+
+def test_quota_error_becomes_safe_user_facing_fallback_reason() -> None:
+    response = httpx.Response(
+        429,
+        request=httpx.Request("POST", "https://api.openai.com/v1/responses"),
+    )
+    rate_error = RateLimitError(
+        "insufficient quota",
+        response=response,
+        body={"code": "insufficient_quota"},
+    )
+    advisor = OpenAIAdvisor(
+        "test-key",
+        client=FakeClient(FakeResponses(valid_payload(), error=rate_error)),
+    )
+
+    advice = HybridTriageService(advisor).analyze(
+        "Model X", "BMC 網路連不上", use_llm=True
+    )
+
+    assert advice.source is AdviceSource.DETERMINISTIC
+    assert "額度不足" in advice.fallback_reason
+    assert "insufficient quota" not in advice.fallback_reason
 
 
 def test_step_question_answer_cannot_route_to_a_different_step() -> None:

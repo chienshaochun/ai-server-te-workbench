@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from openai import APIConnectionError, APITimeoutError, AuthenticationError, RateLimitError
+
 from ai_server_te_workbench.conversation import DiagnosticStep, TroubleshootingSession
 from ai_server_te_workbench.knowledge import PatternMatch, SymptomCategory
 from ai_server_te_workbench.knowledge.generic_flows import START_STEPS
@@ -238,6 +240,18 @@ class OpenAIAdvisor:
                 raise TypeError("model output must be an object")
             response_model = getattr(response, "model", self.model)
             return data, str(response_model)
+        except AuthenticationError as error:
+            raise LLMServiceError(
+                "OpenAI API key 無效或沒有此專案權限，已改用 deterministic fallback。"
+            ) from error
+        except RateLimitError as error:
+            raise LLMServiceError(
+                "OpenAI API 額度不足或遇到速率限制，已改用 deterministic fallback。"
+            ) from error
+        except (APIConnectionError, APITimeoutError) as error:
+            raise LLMServiceError(
+                "OpenAI API 連線失敗或逾時，已改用 deterministic fallback。"
+            ) from error
         except LLMServiceError:
             raise
         except Exception as error:
