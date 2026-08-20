@@ -8,7 +8,9 @@ version = "0.1.0"
 description = "A deterministic AI server test engineering troubleshooting simulator."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+  "streamlit>=1.40,<2",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -27,4 +29,3 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F"]
-

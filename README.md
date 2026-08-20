@@ -100,6 +100,18 @@ INCONCLUSIVE
 - Ruff
 - GitHub Actions
 
+## 本機啟動
+
+```powershell
+conda activate dev
+cd C:\Users\ru03g\side_project\ai-server-te-workbench
+python -m pip install -e .
+python -m streamlit run app.py
+```
+
+瀏覽器開啟 Streamlit 顯示的 local URL。公開 demo 的 common issues 使用 synthetic history；
+重新啟動 app 後，本次 session 累積的案例不會被永久保存。
+
 ## 開發階段
 
 - Phase 1：需求、MVP 邊界、架構與驗收標準
