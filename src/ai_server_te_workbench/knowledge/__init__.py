@@ -10,7 +10,13 @@ from ai_server_te_workbench.knowledge.models import (
     CommonIssueSummary,
     IssueMatch,
     KnowledgeEntry,
+    PatternMatch,
     SymptomCategory,
+    SyntheticCasePattern,
+)
+from ai_server_te_workbench.knowledge.synthetic_patterns import (
+    match_case_patterns,
+    synthetic_case_patterns,
 )
 
 __all__ = [
@@ -19,7 +25,11 @@ __all__ = [
     "CommonIssueSummary",
     "IssueMatch",
     "KnowledgeEntry",
+    "PatternMatch",
     "SymptomCategory",
+    "SyntheticCasePattern",
     "generic_knowledge_entries",
     "synthetic_case_history",
+    "synthetic_case_patterns",
+    "match_case_patterns",
 ]

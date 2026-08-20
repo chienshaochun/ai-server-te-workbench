@@ -147,6 +147,69 @@ class CommonIssueSummary:
             raise TypeError("is_common and synthetic must be bool values")
 
 
+@dataclass(frozen=True)
+class SyntheticCasePattern:
+    id: str
+    title_zh: str
+    example_problem_zh: str
+    symptom_category: SymptomCategory
+    keywords: tuple[str, ...]
+    observed_conditions: tuple[str, ...]
+    recommended_first_check_zh: str
+    dominant_resolution_id: str
+    resolution_summary_zh: str
+    case_count: int
+    resolved_count: int
+
+    def __post_init__(self) -> None:
+        _require_identifier(self.id, "pattern id")
+        _require_text(self.title_zh, "title_zh")
+        _require_text(self.example_problem_zh, "example_problem_zh")
+        if not isinstance(self.symptom_category, SymptomCategory):
+            raise TypeError("symptom_category must be a SymptomCategory")
+        for field_name in ("keywords", "observed_conditions"):
+            value = getattr(self, field_name)
+            if isinstance(value, list):
+                value = tuple(value)
+                object.__setattr__(self, field_name, value)
+            if (
+                not isinstance(value, tuple)
+                or not value
+                or not all(isinstance(item, str) and item.strip() for item in value)
+            ):
+                raise ValueError(f"{field_name} requires non-empty text values")
+        _require_text(self.recommended_first_check_zh, "recommended_first_check_zh")
+        _require_identifier(self.dominant_resolution_id, "dominant_resolution_id")
+        _require_text(self.resolution_summary_zh, "resolution_summary_zh")
+        for field_name in ("case_count", "resolved_count"):
+            value = getattr(self, field_name)
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                raise ValueError(f"{field_name} must be a non-negative integer")
+        if self.case_count < 1 or self.resolved_count > self.case_count:
+            raise ValueError("case counts are inconsistent")
+
+    @property
+    def resolution_rate(self) -> float:
+        return self.resolved_count / self.case_count
+
+
+@dataclass(frozen=True)
+class PatternMatch:
+    pattern: SyntheticCasePattern
+    score: float
+    matched_terms: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.pattern, SyntheticCasePattern):
+            raise TypeError("pattern must be a SyntheticCasePattern")
+        if not isinstance(self.score, (int, float)) or isinstance(self.score, bool):
+            raise TypeError("score must be numeric")
+        if not 0 <= self.score <= 1:
+            raise ValueError("score must be between 0 and 1")
+        if isinstance(self.matched_terms, list):
+            object.__setattr__(self, "matched_terms", tuple(self.matched_terms))
+
+
 def _require_text(value: object, field_name: str) -> None:
     if not isinstance(value, str):
         raise TypeError(f"{field_name} must be text")
