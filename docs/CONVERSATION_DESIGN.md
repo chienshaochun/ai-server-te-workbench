@@ -12,8 +12,8 @@
 1. 從常見問題下拉選單選擇已聚合的 symptom。
 2. 輸入自由文字，例如「網路連不上」或「這台不行但另一台可以」。
 
-自由文字可勾選 AI 輔助理解。LLM 只輸出固定 category 與核准 start step；如果未勾選、沒有
-API key、呼叫失敗或本地 allowlist 驗證失敗，系統使用 deterministic matcher。
+自由文字由本機 deterministic matcher 處理，只能輸出固定 category 與核准 start step。明確
+關鍵詞未達信心門檻時，系統進入使用者確認流程；輸入不會送往外部 API。
 
 未知型號只作為報告與案例分群資訊，第一版套用 `generic_ai_server` knowledge pack。除非未來加入
 經驗證的 model-specific pack，否則 UI 不顯示該型號專屬 pin、firmware 或拆裝指示。
@@ -23,7 +23,7 @@ API key、呼叫失敗或本地 allowlist 驗證失敗，系統使用 determinis
 ```text
 NEW
  ↓
-OPTIONAL_AI_TRIAGE → VALIDATE_ALLOWLIST → FALLBACK（必要時）
+LOCAL_ISSUE_MATCHER → CONFIDENCE_CHECK
  ↓
 NEEDS_CATEGORY_CONFIRMATION（僅低信心時）
  ↓
@@ -65,6 +65,10 @@ ASKING → WAITING_FOR_ANSWER → ASKING
 - `firmware_mismatch`：核對 approved baseline、image checksum、設定與更新流程。
 - `gpu_missing`：先核對 enumeration 與 power state，再由合格人員斷電檢查 seating／power。
 - `temperature_high`：確認 sensor、load、fan 與 airflow，再由合格人員檢查 cooling contact。
+- `power_or_post_failure`：先分辨外部供電、非預期關機或 POST 卡住，保留 LED／POST log。
+- `memory_error`：比對 DIMM inventory、ECC log、population rule 與核准的實體檢查。
+- `storage_failure`：區分裝置遺失、RAID degraded 與 I/O timeout，避免未授權資料破壞。
+- `os_boot_failure`：區分 local boot、PXE deployment 與 kernel 階段，先核對 boot baseline。
 - `unknown`：要求選擇最接近的 symptom 或標記 escalated，不生成 root cause。
 
 ## 常見問題統計
@@ -85,16 +89,17 @@ resolution_consistency = dominant_resolution_count / resolved_case_count
 is_common = resolved_case_count >= 3 and resolution_consistency >= 0.60
 ```
 
-公開 demo 的 initial history 與 12 個常見模式是 synthetic data，共代表 72 筆 fictional
+公開 demo 的 initial history 與 24 個常見模式是 synthetic data，共代表 138 筆 fictional
 aggregates；UI 必須顯示此限制。Phase 6 不加入帳號或持久化多人資料庫，因此這些數字代表
 模擬案例筆數，不代表真實客戶資料或不重複使用者。
 
-## 排查中的 AI 問答
+## 安全與決策邊界
 
-AI 問答只接受目前 `DiagnosticStep`、已記錄 observation 與使用者問題。模型回傳的
-`related_step_id` 必須等於目前 step，否則整個回答拒絕顯示。回答只能解釋為何執行目前檢查、
-缺少什麼 evidence 或何時應升級處理；不能替使用者選擇 Yes／No、生成新 branch 或宣稱 root
-cause。每個瀏覽器 session 最多 5 次 API 呼叫。
+- App 只呈現 knowledge pack 中已審核的 `DiagnosticStep`，不自由生成維修動作。
+- 拆機、DIMM／GPU seating 與內部 storage path 一律要求安全斷電、ESD 與合格人員。
+- Storage 初始化、RAID rebuild 或可能覆寫資料的操作，不在 UI 中自動建議或執行。
+- `resolved` 只代表相同條件下重測恢復；不能被解讀為零件 root cause 已確認。
+- 無法安全驗證、evidence 不足或 baseline 一致但仍失敗時，流程標記 unresolved／escalated。
 
 ## 報告新增內容
 
@@ -105,5 +110,3 @@ cause。每個瀏覽器 session 最多 5 次 API 呼叫。
 - 使用者實際完成與未完成的檢查。
 - session outcome 與 resolution ID。
 - common issue 是否來自 synthetic history 的揭露。
-- AI triage 的來源、模型、摘要、理由與 fallback 狀態。
-- 使用者主動提出的 AI advisory Q&A，以及它所對應的核准 step。

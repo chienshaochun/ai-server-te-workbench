@@ -41,18 +41,18 @@
 - 自由文字先映射至 symptom category，低信心時要求使用者確認類別。
 - 每次只顯示目前能回答的一個問題或一個實體檢查步驟。
 - 每個分支保存 question、answer、observation、recommended check 與 evidence reference。
-- 最低支援 network unreachable、one unit works but another fails、firmware mismatch、GPU
-  missing、temperature high 與 unknown 六類入口。
+- 支援 network、one-unit-only、firmware、GPU、temperature、power／POST、memory、storage、
+  OS／PXE 與 unknown 共十類入口。
 - 建議涉及拆機或電氣操作時，必須要求安全斷電並交由合格人員執行。
 
-### Optional LLM assistance
+### Offline knowledge pack
 
-- 未設定 API key 時，所有入口與逐步排查仍可用 deterministic 模式完成。
-- LLM triage 必須使用 structured output，且只能選擇既有 category 與 start step。
-- 本地端必須再次驗證 category-to-step allowlist；失敗時自動使用 deterministic fallback。
-- LLM 問答只能解釋目前 step，不得提交 answer、改變 session state 或產生新硬體指令。
-- API request 不保存，輸入最多 1000 字、單次問答最多 500 字，並限制輸出 token。
-- 公開 demo 每個瀏覽器 session 最多呼叫 5 次；production 需另加跨 session rate limit。
+- 主流程不得依賴外部 API、網路連線或付費模型額度。
+- 自由文字以本機關鍵字、信心門檻與固定 category-to-step mapping 分流。
+- 低信心或不明症狀必須進入 category confirmation，不得自動生成 root cause。
+- 所有 step、answer、observation 與 resolution 都必須來自已驗證的 knowledge pack。
+- 使用者問題最多 1000 字，且不得要求客戶名稱、密碼、token 或設備序號。
+- LLM 只列為未來評估項目，不包含於目前 runtime dependency 或 UI。
 
 ### Common issues
 
@@ -60,7 +60,7 @@
 - common issue 預設至少具有 3 筆 resolved cases，且主要 resolution 占比至少 60%。
 - 下拉選單按 resolved case count、resolution consistency 與名稱穩定排序。
 - MVP synthetic history 必須在 UI 與報告中標示為 demo data。
-- 公開 demo 至少提供 12 個具體 synthetic patterns，共代表 72 筆 fictional aggregates。
+- 公開 demo 提供 24 個具體 synthetic patterns，共代表 138 筆 fictional aggregates。
 - 沒有帳號系統時只能宣稱 case count，不得宣稱 unique user count。
 
 ### Reporting
@@ -68,7 +68,6 @@
 - 報告包含 environment、fixture、DUT、test summary、failures、evidence、分類與建議檢查。
 - 支援 Markdown 與單檔 HTML。
 - 報告必須揭露 synthetic data 與 simulator 限制。
-- 使用 LLM 時，報告必須保存來源、模型、advisory summary 與使用者主動提出的 AI 問答。
 
 ## 非功能需求
 
@@ -77,18 +76,18 @@
 - 所有測試邏輯可由 pytest 在無 UI 環境執行。
 - 使用者輸入必須經過 schema 與範圍驗證。
 - 不保存 token、密碼或真實客戶資料。
-- API key 必須來自 server-side secret，不得寫入 repository 或傳送到前端。
+- 目前版本不得讀取、保存或要求任何外部 API key。
 
 ## 不在 MVP 範圍
 
 - 真實硬體控制或電氣量測
 - 自動修復硬體、firmware 或測試站
-- LLM root-cause generation、自由產生維修命令或自動操作 state machine
+- LLM 輔助、root-cause generation、自由產生維修命令或自動操作 state machine
 - 使用者帳號與權限系統
 - 持久化多人案例資料庫、使用者人數統計或即時產線串接
 - 大規模製造排程與 MES 整合
 
-## 10 項可量測驗收標準
+## 可量測驗收標準
 
 1. 內建一個正常 DUT、一個 golden sample 與兩個 fixture scenarios。
 2. Fixture precheck 能區分 READY 與 BLOCKED，且 BLOCKED 不計為 DUT FAIL。
@@ -106,7 +105,7 @@
 14. common issue 統計可重現門檻、case count、resolved count 與主要 resolution ratio。
 15. 最終 Markdown 與 HTML 報告包含問答 transcript、已執行檢查與 session outcome。
 16. Streamlit demo 可完成 network unreachable 與 one-unit-only 兩條逐步問答流程。
-17. OpenAI 回應的 category 與 step 不一致時，流程必須拒絕並退回 deterministic matcher。
-18. 沒有 OpenAI key、API 失敗或達 session call cap 時，app 仍可完成排查與報告。
-19. 常見問題選單包含 12 個透明 synthetic patterns，總 case count 為 72。
-20. AI advisory 可進入 Markdown 與 HTML，且所有使用者與模型文字在 HTML 中正確 escape。
+17. App 在無 API key、無外部網路的情況下仍可完成排查與報告。
+18. 自由文字只有明確關鍵詞達信心門檻時才自動分流，模糊文字要求 category confirmation。
+19. 常見問題選單包含 24 個透明 synthetic patterns，總 case count 為 138。
+20. 使用者輸入在 HTML 報告中正確 escape，且 storage／拆機流程顯示明確安全警告。

@@ -45,26 +45,27 @@ Fixture／DUT／Golden Sample／Cross-station 分流
 Markdown / HTML 檢測報告
 ```
 
-自由文字入口採用混合式架構：使用者可選擇 OpenAI API 協助理解自然語言；模型只能回傳固定
-schema 並選擇核准的 troubleshooting 入口。API 未設定、額度用完、逾時或回應未通過本地驗證
-時，系統自動改用可測試的規則與關鍵詞比對。兩種模式都不能把推測描述成硬體根因。
-
-排查中的 AI 問答只會解釋目前核准步驟及已記錄 evidence，不會替使用者提交結果、跳轉流程、
-控制硬體或執行修復。
+自由文字入口完全在 App 內以可測試的規則與關鍵詞比對，選擇核准的 troubleshooting 入口。
+輸入內容不會傳送到外部 API；低信心或無法辨識時，系統會要求使用者自行確認最接近的問題
+類別，不會憑空生成硬體根因。
 
 ## 常見問題如何定義
 
-公開 demo 內建 12 個具體模式，共代表 72 筆 fictional case aggregates，涵蓋：
+公開 demo 內建 24 個具體模式，共代表 138 筆虛構聚合案例，涵蓋：
 
 - 單台 BMC timeout、同站所有機器離線、link down、IP conflict 與 VLAN 差異。
 - 問題跟著 DUT 或留在 station。
 - Firmware baseline、GPU enumeration 與 temperature／airflow 情境。
+- 無法上電、卡在 POST、上電後自行關機。
+- DIMM inventory、記憶體容量與 ECC error。
+- NVMe 未辨識、RAID degraded 與 storage I/O timeout。
+- Local OS、PXE deployment、no boot device 與 kernel panic。
 - 每個模式的案例數、resolved 數、第一個建議檢查與模擬解法。
 
 這些數字不是實際客戶資料、維修紀錄或不重複使用者人數。未來接上持久化案例庫並取得合法
 匿名資料後，才能計算真實常見問題統計。
 
-第一版只模擬四個代表性測試：
+底層測試執行器另模擬四個代表性自動測試：
 
 - BMC connectivity
 - Firmware version
@@ -99,7 +100,6 @@ INCONCLUSIVE
 
 - Python 3.12+
 - Streamlit
-- OpenAI Responses API（optional）
 - 標準函式庫 dataclasses／JSON／HTML
 - pytest
 - Ruff
@@ -114,37 +114,19 @@ python -m pip install -e .
 python -m streamlit run app.py
 ```
 
-瀏覽器開啟 Streamlit 顯示的 local URL。公開 demo 的 common issues 使用 synthetic history；
+瀏覽器開啟 Streamlit 顯示的 local URL。公開 demo 的常見問題使用模擬案例；
 重新啟動 app 後，本次 session 累積的案例不會被永久保存。
-
-### 啟用本機 AI 輔助
-
-複製範例 Secrets 並填入自己的 key，請勿提交 `secrets.toml`：
-
-```powershell
-Copy-Item .streamlit\secrets.toml.example .streamlit\secrets.toml
-notepad .streamlit\secrets.toml
-```
-
-```toml
-OPENAI_API_KEY = "sk-..."
-OPENAI_MODEL = "gpt-5.6-luna"
-```
-
-沒有 key 時 app 仍能完整執行 deterministic 流程。AI 選項預設關閉；每個瀏覽器 session 最多
-呼叫 5 次，且 API request 使用 `store=False`。這只是 portfolio demo 的成本護欄，不是完整的
-跨使用者 rate limit；公開部署仍應設定 API 使用預算與監控。
-
-若畫面顯示「額度不足或速率限制」，請到 OpenAI Platform 檢查 **Billing** 與 **Usage**。建立
-API key 不代表帳號已具有可用 API 額度；在額度可用前，app 會安全地維持 deterministic 模式。
-
-實作依據：[OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
-與 [API key 安全實務](https://developers.openai.com/api/docs/guides/production-best-practices#api-keys)。
 
 ### Streamlit Community Cloud
 
-在 app 的 **Settings → Secrets** 加入相同兩個欄位。不要把 key 放入 GitHub、README、前端輸入
-框或任何會顯示在瀏覽器的程式碼。部署後先以少量測試確認 API 權限與使用量。
+此版本沒有外部 API 或資料庫依賴，不需要在 **Settings → Secrets** 設定金鑰。Streamlit Cloud
+只要以 Python 3.12 安裝本 repository，即可直接啟動 `app.py`。
+
+## 未來保留項目
+
+若未來取得合適的真實匿名案例與成本／安全需求，再評估持久化案例庫、model-specific knowledge
+pack 或 LLM 輔助。這些目前都不在實作範圍；核心流程會繼續由可重現的規則、使用者觀察與
+Golden Sample／Cross-station evidence 控制。
 
 ## 開發階段
 
@@ -157,7 +139,7 @@ API key 不代表帳號已具有可用 API 額度；在額度可用前，app 會
 - Phase 6B：問題辨識、knowledge pack 與常見案例統計
 - Phase 6C：逐步問答 state machine 與 troubleshooting session
 - Phase 6D：Streamlit UI、報告整合與端到端測試
-- Phase 6E：12 種 synthetic patterns、可選 LLM triage、安全 fallback 與 AI advisory report
+- Phase 6E：24 種模擬常見情境、9 類離線分流與 138 筆透明虛構聚合案例
 - Phase 7：GitHub、CI、Streamlit Cloud 與人工 demo
 
 詳細規格請見 [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md)，架構請見

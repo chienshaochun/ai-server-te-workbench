@@ -9,8 +9,8 @@
 5. **Hardware boundary**：MVP 只使用 mock adapter，未來真實協定不改動核心模型。
 6. **One verifiable step at a time**：問答系統每次只建議一個能回填結果的檢查動作。
 7. **No invented model knowledge**：未知 server 型號使用 generic knowledge pack，不虛構廠商規格。
-8. **LLM is advisory**：LLM 理解文字與解釋目前步驟；deterministic controller 擁有流程控制權。
-9. **Fail-safe fallback**：API、schema 或 allowlist 驗證失敗時，退回本地 matcher，不中斷排查。
+8. **Offline by default**：主流程不依賴外部 API、付費額度或網路連線。
+9. **Low-confidence confirmation**：本地 matcher 不確定時由使用者選擇類別，不猜測 root cause。
 
 ## 系統流程
 
@@ -19,9 +19,7 @@ Streamlit UI
     ↓
 Application Service
     ├── Issue Matcher
-    ├── Hybrid Triage Service
-    │      ├── OpenAI Responses Adapter（optional）
-    │      └── Deterministic Fallback
+    ├── Offline Knowledge Pack
     ├── Conversation Controller
     ├── Common Issue Statistics
     ├── Fixture Precheck
@@ -174,30 +172,29 @@ Conversation Controller 提出交換 cable／port／station 的單一步驟
 Assessment + conversation transcript → Report Builder
 ```
 
-自由文字由 Hybrid Triage Service 處理。啟用 OpenAI 時，Responses API 以 strict JSON schema
-回傳 category、confidence、missing information 與核准的 start step；本地程式再次驗證
-`category → start_step` 對應。未啟用或驗證失敗時使用 deterministic matcher。兩者都只負責找到
-入口，不負責生成 root cause；真正的分流仍由使用者回答、量測 evidence 與交叉驗證規則決定。
+自由文字由本地 Issue Matcher 處理。Matcher 依審核過的 strong／weak keywords 計分，回傳
+category、confidence 與 matched terms；低信心時固定進入 `unknown_category`，由使用者確認核准
+入口。真正的分流仍由使用者回答、量測 evidence 與交叉驗證規則決定。
 
-## LLM 安全邊界
+## 離線分流邊界
 
 ```text
-Untrusted user description
-          ↓
-OpenAI Structured Output（store=False）
-          ↓
-Local dataclass validation
-          ↓
-Category-to-step allowlist
-     pass ↓             fail → deterministic fallback
+User description（max 1000 chars）
+             ↓
+Local keyword scoring
+             ↓
+Confidence threshold
+ high ↓                  low → Category confirmation
+Approved category-to-step mapping
+             ↓
 Conversation Controller
 ```
 
-- 預設模型為適合分類與短回答的 `gpt-5.6-luna`，可由 `OPENAI_MODEL` 覆寫。
-- AI 輸出不能新增 step、answer、resolution 或硬體操作。
-- AI 問答只能解釋目前 step；`related_step_id` 不一致即拒絕顯示。
-- API key 只從 Streamlit Secrets 讀取，request 不保存於 OpenAI (`store=False`)。
-- UI 每個瀏覽器 session 最多 5 次呼叫；production 仍需要 server-side rate limit、身份與預算控制。
+- Matcher 只能選擇 `SymptomCategory` enum 中的類別。
+- `START_STEPS` 是唯一 category-to-step mapping，controller 初始化時驗證所有 step reference。
+- Knowledge pack 不能新增任意 shell、IPMI、Redfish 或硬體控制動作。
+- 使用者文字只留在當次 Streamlit session 與下載報告，不會傳送到第三方服務。
+- 未來即使評估 LLM，也不得取代 deterministic controller 或安全邊界。
 
 ## 交叉驗證矩陣
 
@@ -237,8 +234,6 @@ MVP 實作 `MockDeviceAdapter`。未來若有合法設備與測試環境，才�
 - 模擬過度理想化：以 fault injection、conflicting evidence 與 inconclusive cases 緩解。
 - 將 correlation 當 root cause：資料模型與報告用詞強制使用 suspected／possible。
 - UI 與邏輯耦合：所有核心流程先以無 UI 測試驗證。
-- LLM 取代測試工程判斷：以 strict schema、step allowlist、advisory-only UI 與 fallback 緩解。
-- 公開 API 成本遭濫用：預設關閉、session call cap、輸入長度、輸出 token 與平台預算共同控制。
 - 自由文字被錯誤理解：使用明確信心門檻，低信心時要求使用者確認 symptom category。
 - 常見問題統計被誤解為使用者人數：只顯示匿名 case count，synthetic data 明確標示。
 - 治具能力被誇大：明確標示 readiness simulator，不宣稱完成實體治具設計。

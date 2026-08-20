@@ -18,9 +18,27 @@ from ai_server_te_workbench.reporting import (
 )
 
 
-st.set_page_config(page_title="AI Server TE Troubleshooting", page_icon="🛠️", layout="wide")
+st.set_page_config(page_title="AI Server TE 排查工作台", page_icon="🛠️", layout="wide")
 
 controller = ConversationController()
+CATEGORY_LABELS = {
+    SymptomCategory.NETWORK_UNREACHABLE: "網路／BMC 無法連線",
+    SymptomCategory.ONE_UNIT_ONLY: "只有單台設備異常",
+    SymptomCategory.FIRMWARE_MISMATCH: "Firmware 版本／設定不一致",
+    SymptomCategory.GPU_MISSING: "GPU 未完整辨識",
+    SymptomCategory.TEMPERATURE_HIGH: "溫度／散熱異常",
+    SymptomCategory.POWER_OR_POST_FAILURE: "無法上電／卡在 POST",
+    SymptomCategory.MEMORY_ERROR: "記憶體容量／ECC 異常",
+    SymptomCategory.STORAGE_FAILURE: "NVMe／磁碟／RAID 異常",
+    SymptomCategory.OS_BOOT_FAILURE: "OS／PXE 無法開機",
+    SymptomCategory.UNKNOWN: "尚未分類",
+}
+OUTCOME_LABELS = {
+    SessionOutcome.ACTIVE: "排查中",
+    SessionOutcome.RESOLVED: "已恢復",
+    SessionOutcome.UNRESOLVED: "資訊不足",
+    SessionOutcome.ESCALATED: "需要升級處理",
+}
 
 if "case_history" not in st.session_state:
     st.session_state.case_history = list(synthetic_case_history())
@@ -29,8 +47,8 @@ if "troubleshooting_session" not in st.session_state:
 if "recorded_session_ids" not in st.session_state:
     st.session_state.recorded_session_ids = set()
 
-st.title("AI Server TE Guided Troubleshooting")
-st.caption("一次完成一個可驗證步驟，保留 evidence，最後產生交接報告。")
+st.title("AI Server TE 引導式排查工作台")
+st.caption("一次完成一個可驗證步驟，保留檢查證據，最後產生交接報告。")
 st.warning(
     "這是 generic AI server 模擬器：不連接、不控制也不修復真實硬體；"
     "建議涉及拆機時必須安全斷電並由合格人員執行。"
@@ -55,12 +73,19 @@ if session is None:
 
     if entry_mode == "常見問題":
         patterns = synthetic_case_patterns()
+        categories = tuple(dict.fromkeys(pattern.symptom_category for pattern in patterns))
+        category_by_label = {CATEGORY_LABELS[item]: item for item in categories}
+        selected_category_label = st.selectbox("問題類別", tuple(category_by_label))
+        selected_category = category_by_label[selected_category_label]
+        category_patterns = tuple(
+            pattern for pattern in patterns if pattern.symptom_category is selected_category
+        )
         pattern_by_label = {
-            f"{pattern.title_zh}｜{pattern.case_count} synthetic cases｜"
-            f"resolved {pattern.resolution_rate:.0%}": pattern
-            for pattern in patterns
+            f"{pattern.title_zh}｜模擬案例 {pattern.case_count} 筆｜"
+            f"解決率 {pattern.resolution_rate:.0%}": pattern
+            for pattern in category_patterns
         }
-        selected_label = st.selectbox("常見問題（synthetic demo history）", tuple(pattern_by_label))
+        selected_label = st.selectbox("常見問題情境（模擬資料）", tuple(pattern_by_label))
         selected = pattern_by_label[selected_label]
         category = selected.symptom_category
         confidence = 1.0
@@ -68,7 +93,7 @@ if session is None:
         st.markdown(f"**模擬現象：** {selected.example_problem_zh}")
         st.markdown(f"**建議先檢查：** {selected.recommended_first_check_zh}")
         total_cases = sum(pattern.case_count for pattern in patterns)
-        st.info(f"這 {total_cases} 筆是透明的 fictional case aggregates，不是真實使用者或客戶資料。")
+        st.info(f"知識庫共 {total_cases} 筆虛構聚合案例，不是真實使用者或客戶資料。")
     else:
         problem = st.text_area(
             "描述遇到的問題",
@@ -107,8 +132,11 @@ else:
     st.subheader("2. 逐步排查")
     col1, col2, col3 = st.columns(3)
     col1.metric("Server", session.server_model)
-    col2.metric("Category", session.symptom_category.value)
-    col3.metric("Outcome", session.outcome.value)
+    col2.metric("症狀分類", CATEGORY_LABELS[session.symptom_category])
+    col3.metric("流程狀態", OUTCOME_LABELS[session.outcome])
+    st.caption(
+        f"技術代碼：{session.symptom_category.value}｜狀態代碼：{session.outcome.value}"
+    )
 
     if session.transcript:
         with st.expander(f"已完成 {len(session.transcript)} 個步驟", expanded=False):
@@ -140,8 +168,8 @@ else:
             SessionOutcome.ESCALATED: st.error,
         }[session.outcome]
         status_renderer(
-            f"流程結束：{session.outcome.value}"
-            + (f"｜resolution: {session.resolution_id}" if session.resolution_id else "")
+            f"流程結束：{OUTCOME_LABELS[session.outcome]}"
+            + (f"｜處置代碼：{session.resolution_id}" if session.resolution_id else "")
         )
         report = GuidedReportDocument(session)
         markdown = render_guided_markdown(report)
