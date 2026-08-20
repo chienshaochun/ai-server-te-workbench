@@ -115,6 +115,40 @@ def test_temperature_flow_can_resolve_after_airflow_retest() -> None:
     assert session.resolution_id == "restore_airflow"
 
 
+@pytest.mark.parametrize(
+    ("category", "answers", "resolution_id"),
+    [
+        (
+            SymptomCategory.POWER_OR_POST_FAILURE,
+            ("no_power", "no", "yes"),
+            "restore_external_power_path",
+        ),
+        (
+            SymptomCategory.MEMORY_ERROR,
+            ("yes", "no", "yes"),
+            "restore_memory_configuration",
+        ),
+        (
+            SymptomCategory.STORAGE_FAILURE,
+            ("missing", "no", "yes"),
+            "restore_storage_path",
+        ),
+        (
+            SymptomCategory.OS_BOOT_FAILURE,
+            ("pxe", "no", "yes"),
+            "restore_pxe_path",
+        ),
+    ],
+)
+def test_expanded_flows_can_reach_verified_resolution(
+    category: SymptomCategory, answers: tuple[str, ...], resolution_id: str
+) -> None:
+    session = answer_sequence(start(category), *answers)
+
+    assert session.outcome is SessionOutcome.RESOLVED
+    assert session.resolution_id == resolution_id
+
+
 def test_unknown_problem_routes_only_after_explicit_category_confirmation() -> None:
     session = start(SymptomCategory.UNKNOWN)
     session = answer_sequence(session, "network")

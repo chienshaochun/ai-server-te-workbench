@@ -54,10 +54,11 @@ if session is None:
     problem = ""
 
     if entry_mode == "常見問題":
+        patterns = synthetic_case_patterns()
         pattern_by_label = {
             f"{pattern.title_zh}｜{pattern.case_count} synthetic cases｜"
             f"resolved {pattern.resolution_rate:.0%}": pattern
-            for pattern in synthetic_case_patterns()
+            for pattern in patterns
         }
         selected_label = st.selectbox("常見問題（synthetic demo history）", tuple(pattern_by_label))
         selected = pattern_by_label[selected_label]
@@ -66,7 +67,8 @@ if session is None:
         problem = selected.example_problem_zh
         st.markdown(f"**模擬現象：** {selected.example_problem_zh}")
         st.markdown(f"**建議先檢查：** {selected.recommended_first_check_zh}")
-        st.info("這 72 筆是透明的 fictional case aggregates，不是真實使用者或客戶資料。")
+        total_cases = sum(pattern.case_count for pattern in patterns)
+        st.info(f"這 {total_cases} 筆是透明的 fictional case aggregates，不是真實使用者或客戶資料。")
     else:
         problem = st.text_area(
             "描述遇到的問題",

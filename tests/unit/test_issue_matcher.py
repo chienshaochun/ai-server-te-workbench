@@ -13,6 +13,10 @@ from ai_server_te_workbench.knowledge import KnowledgeEntry, SymptomCategory
         ("firmware version 不符", SymptomCategory.FIRMWARE_MISMATCH),
         ("GPU 少一張，系統看不到", SymptomCategory.GPU_MISSING),
         ("CPU 溫度太高", SymptomCategory.TEMPERATURE_HIGH),
+        ("按電源沒反應，無法上電", SymptomCategory.POWER_OR_POST_FAILURE),
+        ("壓力測試出現 ECC error", SymptomCategory.MEMORY_ERROR),
+        ("RAID degraded", SymptomCategory.STORAGE_FAILURE),
+        ("PXE boot failure", SymptomCategory.OS_BOOT_FAILURE),
     ],
 )
 def test_problem_text_maps_to_supported_conversation_entry(

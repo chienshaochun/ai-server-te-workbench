@@ -22,7 +22,7 @@ def test_app_loads_with_common_issue_entry_and_safety_boundary() -> None:
     assert app.title[0].value == "AI Server TE Guided Troubleshooting"
     assert app.text_input[0].label == "Server 型號"
     assert "synthetic demo history" in app.selectbox[0].label
-    assert len(app.selectbox[0].options) == 12
+    assert len(app.selectbox[0].options) == 24
     assert any("synthetic cases" in option for option in app.selectbox[0].options)
     assert any("fictional case aggregates" in item.value for item in app.info)
     assert any("不控制" in item.value for item in app.warning)

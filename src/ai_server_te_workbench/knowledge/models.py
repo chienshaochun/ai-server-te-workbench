@@ -13,6 +13,10 @@ class SymptomCategory(str, Enum):
     FIRMWARE_MISMATCH = "firmware_mismatch"
     GPU_MISSING = "gpu_missing"
     TEMPERATURE_HIGH = "temperature_high"
+    POWER_OR_POST_FAILURE = "power_or_post_failure"
+    MEMORY_ERROR = "memory_error"
+    STORAGE_FAILURE = "storage_failure"
+    OS_BOOT_FAILURE = "os_boot_failure"
     UNKNOWN = "unknown"
 
 
