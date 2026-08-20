@@ -350,7 +350,9 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
                 _next("no_power", "按電源完全沒反應", "DUT 沒有可見上電反應。", "power_source"),
                 _next("post", "有上電但卡在 POST", "DUT 已上電但 POST 未完成。", "post_baseline"),
                 _next("shutdown", "上電後自行關機", "DUT 上電後非預期關機。", "power_source"),
-                _end("unknown", "無法確認", "缺少 power／POST evidence。", SessionOutcome.UNRESOLVED),
+                _end(
+                    "unknown", "無法確認", "缺少 power／POST evidence。", SessionOutcome.UNRESOLVED
+                ),
             ],
         ),
         _step(
@@ -372,7 +374,9 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
                     "發現 cable／PDU path 異常並完成核准處理。",
                     "power_retest",
                 ),
-                _end("unknown", "尚未測試", "尚未完成外部供電 A/B 驗證。", SessionOutcome.UNRESOLVED),
+                _end(
+                    "unknown", "尚未測試", "尚未完成外部供電 A/B 驗證。", SessionOutcome.UNRESOLVED
+                ),
             ],
             "不得開啟 PSU 或帶電插拔內部元件；只執行現場核准的外部路徑交換。",
         ),
@@ -403,7 +407,12 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
                     "POST 仍卡住且 baseline 一致，需要攜帶 POST／BMC logs 升級。",
                     SessionOutcome.ESCALATED,
                 ),
-                _end("unknown", "無法確認", "缺少 POST code 或 baseline evidence。", SessionOutcome.UNRESOLVED),
+                _end(
+                    "unknown",
+                    "無法確認",
+                    "缺少 POST code 或 baseline evidence。",
+                    SessionOutcome.UNRESOLVED,
+                ),
             ],
         ),
         _terminal_retest(
@@ -421,7 +430,9 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
             "核對 BIOS／BMC memory inventory、容量與 ECC log，不先拆機。",
             "memory_inventory",
             [
-                _next("yes", "仍異常", "Cold restart 後 memory evidence 仍異常。", "memory_baseline"),
+                _next(
+                    "yes", "仍異常", "Cold restart 後 memory evidence 仍異常。", "memory_baseline"
+                ),
                 _end(
                     "no",
                     "已恢復",
@@ -429,7 +440,12 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
                     SessionOutcome.RESOLVED,
                     "recover_memory_inventory",
                 ),
-                _end("unknown", "無法確認", "缺少 DIMM inventory 或 ECC evidence。", SessionOutcome.UNRESOLVED),
+                _end(
+                    "unknown",
+                    "無法確認",
+                    "缺少 DIMM inventory 或 ECC evidence。",
+                    SessionOutcome.UNRESOLVED,
+                ),
             ],
         ),
         _step(
@@ -446,7 +462,12 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
                     "memory_retest",
                 ),
                 _next("yes", "全部符合", "Memory configuration 符合 baseline。", "memory_physical"),
-                _end("unknown", "無法確認", "缺少 memory BOM 或 baseline evidence。", SessionOutcome.UNRESOLVED),
+                _end(
+                    "unknown",
+                    "無法確認",
+                    "缺少 memory BOM 或 baseline evidence。",
+                    SessionOutcome.UNRESOLVED,
+                ),
             ],
         ),
         _step(
@@ -487,10 +508,30 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
             "區分裝置未辨識、RAID degraded 與 I/O timeout。",
             "storage_scope",
             [
-                _next("missing", "NVMe／磁碟未辨識", "Storage device 未出現在 inventory。", "storage_baseline"),
-                _next("raid", "RAID degraded", "RAID virtual disk 或 member 狀態異常。", "storage_baseline"),
-                _next("io", "I/O timeout／測試失敗", "Storage inventory 存在但 I/O test 異常。", "storage_baseline"),
-                _end("unknown", "無法確認", "缺少 storage symptom evidence。", SessionOutcome.UNRESOLVED),
+                _next(
+                    "missing",
+                    "NVMe／磁碟未辨識",
+                    "Storage device 未出現在 inventory。",
+                    "storage_baseline",
+                ),
+                _next(
+                    "raid",
+                    "RAID degraded",
+                    "RAID virtual disk 或 member 狀態異常。",
+                    "storage_baseline",
+                ),
+                _next(
+                    "io",
+                    "I/O timeout／測試失敗",
+                    "Storage inventory 存在但 I/O test 異常。",
+                    "storage_baseline",
+                ),
+                _end(
+                    "unknown",
+                    "無法確認",
+                    "缺少 storage symptom evidence。",
+                    SessionOutcome.UNRESOLVED,
+                ),
             ],
         ),
         _step(
@@ -507,7 +548,12 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
                     "storage_retest",
                 ),
                 _next("yes", "全部一致", "Storage baseline 一致但症狀仍存在。", "storage_physical"),
-                _end("unknown", "無法確認", "缺少 storage inventory 或 baseline evidence。", SessionOutcome.UNRESOLVED),
+                _end(
+                    "unknown",
+                    "無法確認",
+                    "缺少 storage inventory 或 baseline evidence。",
+                    SessionOutcome.UNRESOLVED,
+                ),
             ],
         ),
         _step(
@@ -529,7 +575,12 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
                     "Baseline 與 A/B swap 未能排除異常，需要攜帶 controller／device logs 升級。",
                     SessionOutcome.ESCALATED,
                 ),
-                _end("not_done", "未執行", "未完成 approved storage A/B swap。", SessionOutcome.UNRESOLVED),
+                _end(
+                    "not_done",
+                    "未執行",
+                    "未完成 approved storage A/B swap。",
+                    SessionOutcome.UNRESOLVED,
+                ),
             ],
             "Storage 測試可能破壞資料；未確認測試媒體與核准程序前不得初始化或重建 RAID。",
         ),
@@ -548,10 +599,22 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
             "確認是 local boot、PXE deployment 或載入 kernel 後失敗。",
             "boot_scope",
             [
-                _next("local", "Local disk／OS 開不起來", "問題位於 local boot path。", "os_boot_baseline"),
+                _next(
+                    "local",
+                    "Local disk／OS 開不起來",
+                    "問題位於 local boot path。",
+                    "os_boot_baseline",
+                ),
                 _next("pxe", "PXE 無法下載或開機", "問題位於 PXE deployment path。", "pxe_golden"),
-                _next("kernel", "載入後 kernel panic", "Boot 已進入 OS loader／kernel 階段。", "os_boot_baseline"),
-                _end("unknown", "無法確認", "缺少 boot stage evidence。", SessionOutcome.UNRESOLVED),
+                _next(
+                    "kernel",
+                    "載入後 kernel panic",
+                    "Boot 已進入 OS loader／kernel 階段。",
+                    "os_boot_baseline",
+                ),
+                _end(
+                    "unknown", "無法確認", "缺少 boot stage evidence。", SessionOutcome.UNRESOLVED
+                ),
             ],
         ),
         _step(
@@ -573,7 +636,12 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
                     "Boot baseline 一致但仍失敗，需要攜帶 console／kernel logs 升級。",
                     SessionOutcome.ESCALATED,
                 ),
-                _end("unknown", "無法確認", "缺少 boot configuration 或 image evidence。", SessionOutcome.UNRESOLVED),
+                _end(
+                    "unknown",
+                    "無法確認",
+                    "缺少 boot configuration 或 image evidence。",
+                    SessionOutcome.UNRESOLVED,
+                ),
             ],
         ),
         _step(
@@ -595,7 +663,12 @@ def generic_flow_steps() -> tuple[DiagnosticStep, ...]:
                     "Golden Sample 也失敗，已處理 PXE deployment path。",
                     "pxe_retest",
                 ),
-                _end("unknown", "尚未測試", "未完成 Golden Sample PXE 驗證。", SessionOutcome.UNRESOLVED),
+                _end(
+                    "unknown",
+                    "尚未測試",
+                    "未完成 Golden Sample PXE 驗證。",
+                    SessionOutcome.UNRESOLVED,
+                ),
             ],
         ),
         _terminal_retest(

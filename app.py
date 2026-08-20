@@ -134,9 +134,7 @@ else:
     col1.metric("Server", session.server_model)
     col2.metric("症狀分類", CATEGORY_LABELS[session.symptom_category])
     col3.metric("流程狀態", OUTCOME_LABELS[session.outcome])
-    st.caption(
-        f"技術代碼：{session.symptom_category.value}｜狀態代碼：{session.outcome.value}"
-    )
+    st.caption(f"技術代碼：{session.symptom_category.value}｜狀態代碼：{session.outcome.value}")
 
     if session.transcript:
         with st.expander(f"已完成 {len(session.transcript)} 個步驟", expanded=False):
