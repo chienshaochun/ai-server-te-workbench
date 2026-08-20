@@ -1,8 +1,9 @@
 # AI Server TE Troubleshooting Workbench
 
-一個以 Streamlit 展示的 AI 伺服器測試工程工作台。專案使用模擬 DUT（Device Under
-Test）與測試治具，示範測試前檢查、測試程式執行、故障注入、交叉驗證、問題分流與檢測
-報告產生。
+一個以 Streamlit 展示的 AI 伺服器測試工程問答工作台。使用者輸入 server 型號與遇到的
+現象，系統會一次提出一個可驗證問題，引導使用者執行交換測試、記錄觀察、縮小問題範圍，
+最後產生可追溯的檢測報告。底層使用模擬 DUT（Device Under Test）與測試治具，示範測試
+前檢查、故障注入、交叉驗證與 evidence-based troubleshooting。
 
 ## 專案定位
 
@@ -29,18 +30,35 @@ Detect → Reproduce → Isolate → Collect Evidence → Recommend Checks → R
 ## MVP 操作流程
 
 ```text
-Fixture Precheck
+輸入 Server 型號
        ↓
-Select DUT + Test Plan
+選擇常見問題，或輸入額外問題
        ↓
-Run 4 Simulated Tests
+辨識症狀並一次詢問一個檢查問題
        ↓
-PASS / FAIL / BLOCKED
+使用者回填觀察結果／交換測試結果
        ↓
-Cross-validation Troubleshooting
+Fixture／DUT／Golden Sample／Cross-station 分流
        ↓
-Markdown / HTML Report
+建議下一個檢查 → 解決／轉交／資訊不足
+       ↓
+Markdown / HTML 檢測報告
 ```
+
+自由文字問答第一版採用可測試的規則與關鍵詞比對，不呼叫外部 LLM，也不把推測描述成硬體
+根因。若辨識信心不足，系統會請使用者選擇問題類別，而不是自行猜測。
+
+## 常見問題如何定義
+
+常見問題以下列匿名案例統計排序：
+
+- 相同 server family 與相似 symptom category 的案例數。
+- 已標記為 resolved 的案例數。
+- resolved 案例中，採用相同 resolution 的比例。
+- MVP 預設門檻：至少 3 筆 resolved cases，且主要 resolution 占比至少 60%。
+
+因 MVP 沒有使用者帳號，畫面呈現的是「案例數」，不會假裝成「不重複使用者人數」。公開
+demo 使用明確標示的 synthetic history；未來接上持久化案例庫後，才可累積真實匿名統計。
 
 第一版只模擬四個代表性測試：
 
@@ -89,8 +107,12 @@ INCONCLUSIVE
 - Phase 3：測試執行器與 fault injection
 - Phase 4：交叉驗證 troubleshooting engine
 - Phase 5：Markdown／HTML 檢測報告
-- Phase 6：Streamlit UI 與端到端測試
+- Phase 6A：問答產品契約、常見問題定義與對話流程
+- Phase 6B：問題辨識、knowledge pack 與常見案例統計
+- Phase 6C：逐步問答 state machine 與 troubleshooting session
+- Phase 6D：Streamlit UI、報告整合與端到端測試
 - Phase 7：GitHub、CI、Streamlit Cloud 與人工 demo
 
 詳細規格請見 [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md)，架構請見
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)，逐步問答設計請見
+[`docs/CONVERSATION_DESIGN.md`](docs/CONVERSATION_DESIGN.md)。
