@@ -9,7 +9,6 @@ description = "A guarded AI-assisted server test engineering troubleshooting sim
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "openai>=2.0,<3",
   "streamlit>=1.40,<2",
 ]
 

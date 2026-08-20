@@ -49,6 +49,7 @@ def test_free_text_comparative_issue_starts_one_unit_flow() -> None:
     app.text_input[0].input("Model Z")
     app.radio[0].set_value("自由文字")
     app.run(timeout=20)
+    assert any("不會傳送到外部 API" in item.value for item in app.info)
     app.text_area[0].input("這台可以但另一台不行")
     button(app, "開始逐步排查").click()
     app.run(timeout=20)
@@ -56,7 +57,6 @@ def test_free_text_comparative_issue_starts_one_unit_flow() -> None:
     assert len(app.exception) == 0
     assert app.metric[1].value == "one_unit_only"
     assert any("相同 station" in item.label for item in app.radio)
-    assert any("Deterministic fallback" in item.label for item in app.expander)
 
 
 def test_symbol_only_model_shows_validation_message_without_crashing() -> None:
