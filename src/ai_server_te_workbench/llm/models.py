@@ -85,6 +85,17 @@ class AssistantAnswer:
             _text(self.safety_warning_zh, "safety_warning_zh")
 
 
+@dataclass(frozen=True)
+class AssistantExchange:
+    question_zh: str
+    answer: AssistantAnswer
+
+    def __post_init__(self) -> None:
+        _text(self.question_zh, "question_zh")
+        if not isinstance(self.answer, AssistantAnswer):
+            raise TypeError("answer must be an AssistantAnswer")
+
+
 def _text(value: object, field_name: str) -> None:
     if not isinstance(value, str):
         raise TypeError(f"{field_name} must be text")

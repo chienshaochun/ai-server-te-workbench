@@ -22,6 +22,9 @@ def test_app_loads_with_common_issue_entry_and_safety_boundary() -> None:
     assert app.title[0].value == "AI Server TE Guided Troubleshooting"
     assert app.text_input[0].label == "Server 型號"
     assert "synthetic demo history" in app.selectbox[0].label
+    assert len(app.selectbox[0].options) == 12
+    assert any("synthetic cases" in option for option in app.selectbox[0].options)
+    assert any("fictional case aggregates" in item.value for item in app.info)
     assert any("不控制" in item.value for item in app.warning)
 
 
@@ -53,6 +56,7 @@ def test_free_text_comparative_issue_starts_one_unit_flow() -> None:
     assert len(app.exception) == 0
     assert app.metric[1].value == "one_unit_only"
     assert any("相同 station" in item.label for item in app.radio)
+    assert any("Deterministic fallback" in item.label for item in app.expander)
 
 
 def test_symbol_only_model_shows_validation_message_without_crashing() -> None:

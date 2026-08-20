@@ -1,6 +1,11 @@
 """Optional LLM assistance with deterministic safety fallback."""
 
-from ai_server_te_workbench.llm.models import AdviceSource, AssistantAnswer, TriageAdvice
+from ai_server_te_workbench.llm.models import (
+    AdviceSource,
+    AssistantAnswer,
+    AssistantExchange,
+    TriageAdvice,
+)
 from ai_server_te_workbench.llm.openai_advisor import DEFAULT_MODEL, OpenAIAdvisor
 from ai_server_te_workbench.llm.service import (
     HybridTriageService,
@@ -12,6 +17,7 @@ from ai_server_te_workbench.llm.service import (
 __all__ = [
     "AdviceSource",
     "AssistantAnswer",
+    "AssistantExchange",
     "DEFAULT_MODEL",
     "HybridTriageService",
     "LLMServiceError",

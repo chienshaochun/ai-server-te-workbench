@@ -4,6 +4,11 @@ import pytest
 
 from ai_server_te_workbench.conversation import ConversationController
 from ai_server_te_workbench.knowledge import SymptomCategory
+from ai_server_te_workbench.llm import (
+    AssistantAnswer,
+    AssistantExchange,
+    deterministic_triage,
+)
 from ai_server_te_workbench.reporting import (
     GuidedReportDocument,
     render_guided_html,
@@ -71,6 +76,34 @@ def test_active_session_cannot_generate_final_report() -> None:
 
     with pytest.raises(ValueError, match="active"):
         GuidedReportDocument(session)
+
+
+def test_ai_advisory_and_question_are_traceable_and_escaped_in_reports() -> None:
+    session = resolved_session()
+    exchange = AssistantExchange(
+        "為什麼要用 <Golden>？",
+        AssistantAnswer(
+            answer_zh="用 <Golden> 區分 DUT 與 station。",
+            recommended_next_action_zh="執行目前核准的交換測試。",
+            safety_warning_zh=None,
+            related_step_id="net_scope",
+            model="test-model",
+        ),
+    )
+    document = GuidedReportDocument(
+        session,
+        triage_advice=deterministic_triage("網路連不上"),
+        assistant_exchanges=(exchange,),
+    )
+
+    markdown = render_guided_markdown(document)
+    html = render_guided_html(document)
+
+    assert "AI Assistance (advisory only)" in markdown
+    assert "為什麼要用 <Golden>" in markdown
+    assert "<Golden>" not in html
+    assert "&lt;Golden&gt;" in html
+    assert "test-model" in html
 
 
 @pytest.mark.parametrize("renderer", [render_guided_markdown, render_guided_html])
