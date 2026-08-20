@@ -7,10 +7,14 @@ from ai_server_te_workbench.models import (
     DeviceUnderTest,
     Evidence,
     Fixture,
+    FixturePrecheckResult,
+    PrecheckStatus,
     ResultStatus,
+    RunStatus,
     TestCase,
     TestPlan,
     TestResult,
+    TestRun,
     TroubleshootingClassification,
 )
 from ai_server_te_workbench.scenarios import (
@@ -28,13 +32,16 @@ __all__ = [
     "Evidence",
     "FaultScenario",
     "Fixture",
+    "FixturePrecheckResult",
+    "PrecheckStatus",
     "ResultStatus",
+    "RunStatus",
     "Scenario",
     "TestCase",
     "TestPlan",
     "TestResult",
+    "TestRun",
     "TroubleshootingClassification",
     "built_in_scenarios",
     "standard_test_plan",
 ]
-
