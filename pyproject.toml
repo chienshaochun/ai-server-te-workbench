@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-server-te-workbench"
+version = "0.1.0"
+description = "A deterministic AI server test engineering troubleshooting simulator."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=9.0",
+  "ruff>=0.16",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q -p no:cacheprovider --import-mode=importlib"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
